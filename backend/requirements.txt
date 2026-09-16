@@ -6,6 +6,7 @@ Django==6.1.1
 django-cors-headers==4.9.0
 djangorestframework==3.18.1
 djangorestframework_simplejwt==5.5.1
+gunicorn==26.2.0
 idna==3.19
 pillow==12.3.0
 psycopg==3.3.5
@@ -16,3 +17,4 @@ requests==2.34.2
 sqlparse==0.6.0
 tzdata==2026.3
 urllib3==2.7.0
+whitenoise==6.12.0
