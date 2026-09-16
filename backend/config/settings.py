@@ -45,7 +45,7 @@ ALLOWED_HOSTS = [
     host.strip()
     for host in config(
         "ALLOWED_HOSTS",
-        default="127.0.0.1,localhost"
+        default="claimflow-zct0.onrender.com,localhost,127.0.0.1"
     ).split(",")
     if host.strip()
 ]
