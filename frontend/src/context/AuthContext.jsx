@@ -1,16 +1,28 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+
+  const [user, setUser] = useState(() => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      return storedUser ? JSON.parse(storedUser) : null;
+    } catch (error) {
+      console.error("Failed to load stored user:", error);
+      return null;
+    }
+  });
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
+    const accessToken = localStorage.getItem("access_token");
 
-    if (!token) {
+    if (!accessToken) {
       setLoading(false);
       return;
     }
@@ -18,11 +30,19 @@ export function AuthProvider({ children }) {
     api
       .get("/auth/me/")
       .then((response) => {
-        setUser(response.data);
+        const currentUser = response.data;
+
+        setUser(currentUser);
+        localStorage.setItem("user", JSON.stringify(currentUser));
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error("Authentication check failed:", error);
+
+        // Token is invalid/expired
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
+        localStorage.removeItem("user");
+
         setUser(null);
       })
       .finally(() => {
@@ -31,25 +51,54 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (email, password) => {
-    const response = await api.post("/auth/login/", {
-      email,
-      password,
-    });
+    try {
+      const response = await api.post("/auth/login/", {
+        email: email.trim(),
+        password,
+      });
 
-    const { access, refresh, user } = response.data;
+      const data = response.data;
 
-    localStorage.setItem("access_token", access);
-    localStorage.setItem("refresh_token", refresh);
+      localStorage.setItem("access_token", data.access);
+      localStorage.setItem("refresh_token", data.refresh);
+      localStorage.setItem("user", JSON.stringify(data.user));
 
-    setUser(user);
+      setUser(data.user);
 
-    return user;
+      return data.user;
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
+    }
   };
 
   const logout = () => {
+    // Remove all ClaimFlow authentication data
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
+    localStorage.removeItem("user");
+
+    // Clear React authentication state
     setUser(null);
+
+    // Go back to ClaimFlow login page
+    navigate("/login", { replace: true });
+  };
+
+  const getDashboardPath = (role) => {
+    switch (role) {
+      case "EMPLOYEE":
+        return "/employee";
+
+      case "MANAGER":
+        return "/manager";
+
+      case "FINANCE":
+        return "/finance";
+
+      default:
+        return "/login";
+    }
   };
 
   return (
@@ -59,6 +108,8 @@ export function AuthProvider({ children }) {
         loading,
         login,
         logout,
+        getDashboardPath,
+        isAuthenticated: !!user,
       }}
     >
       {children}
@@ -67,5 +118,11 @@ export function AuthProvider({ children }) {
 }
 
 export function useAuth() {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+
+  if (!context) {
+    throw new Error("useAuth must be used inside AuthProvider");
+  }
+
+  return context;
 }
