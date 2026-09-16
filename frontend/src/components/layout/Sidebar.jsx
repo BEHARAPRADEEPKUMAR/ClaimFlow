@@ -4,13 +4,14 @@ import {
   WalletCards,
   BarChart3,
   FileText,
-  Receipt,
-  CheckSquare,
-  PlusCircle,
+  Settings,
   LogOut,
+  Receipt,
+  ClipboardCheck,
+  PlusCircle,
 } from "lucide-react";
 
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 const employeeLinks = [
@@ -38,11 +39,6 @@ const managerLinks = [
     icon: LayoutDashboard,
   },
   {
-    name: "Approvals",
-    path: "/manager/approvals",
-    icon: CheckSquare,
-  },
-  {
     name: "My Claims",
     path: "/employee/claims",
     icon: Receipt,
@@ -51,6 +47,11 @@ const managerLinks = [
     name: "New Claim",
     path: "/employee/claims/new",
     icon: PlusCircle,
+  },
+  {
+    name: "Approvals",
+    path: "/manager/approvals",
+    icon: ClipboardCheck,
   },
 ];
 
@@ -84,21 +85,20 @@ const financeLinks = [
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
-
-  const role = user?.role;
+  const navigate = useNavigate();
 
   let links = [];
-  let departmentLabel = "Expense Management";
+  let department = "Employee Department";
 
-  if (role === "EMPLOYEE") {
-    links = employeeLinks;
-    departmentLabel = "Employee Portal";
-  } else if (role === "MANAGER") {
-    links = managerLinks;
-    departmentLabel = "Manager Portal";
-  } else if (role === "FINANCE") {
+  if (user?.role === "FINANCE") {
     links = financeLinks;
-    departmentLabel = "Finance Department";
+    department = "Finance Department";
+  } else if (user?.role === "MANAGER") {
+    links = managerLinks;
+    department = "Manager Department";
+  } else {
+    links = employeeLinks;
+    department = "Employee Department";
   }
 
   const handleLogout = () => {
@@ -106,33 +106,36 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col bg-gradient-to-b from-indigo-950 via-indigo-900 to-indigo-800 text-white">
+    <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col bg-gradient-to-b from-indigo-950 via-indigo-900 to-indigo-700 text-white">
 
       {/* Logo */}
-      <div className="border-b border-white/10 p-6">
+      <div className="p-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-xl font-bold shadow-sm">
+
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-xl font-bold">
             C
           </div>
 
           <div>
-            <h1 className="text-lg font-bold tracking-tight">
+            <h1 className="text-lg font-bold">
               ClaimFlow
             </h1>
 
             <p className="text-xs text-indigo-200">
-              Smart Expense Management
+              Expense Management
             </p>
           </div>
+
         </div>
 
-        <p className="mt-7 text-xs font-semibold uppercase tracking-wider text-indigo-300">
-          {departmentLabel}
+        <p className="mt-8 text-xs uppercase tracking-wider text-indigo-200">
+          {department}
         </p>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-5">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-4">
+
         {links.map((link) => {
           const Icon = link.icon;
 
@@ -141,56 +144,57 @@ export default function Sidebar() {
               key={link.path}
               to={link.path}
               className={({ isActive }) =>
-                `group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
+                `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all ${
                   isActive
-                    ? "bg-white/15 text-white shadow-sm"
+                    ? "bg-white/20 text-white shadow-sm"
                     : "text-indigo-200 hover:bg-white/10 hover:text-white"
                 }`
               }
             >
-              <Icon className="h-5 w-5 shrink-0" />
-              <span>{link.name}</span>
+              <Icon className="h-5 w-5" />
+
+              <span>
+                {link.name}
+              </span>
             </NavLink>
           );
         })}
+
       </nav>
 
-      {/* User + Logout */}
-      <div className="border-t border-white/10 p-4">
+      {/* Bottom section */}
+      <div className="space-y-2 border-t border-white/10 p-4">
 
-        {/* User information */}
-        <div className="mb-3 flex items-center gap-3 rounded-xl bg-white/10 p-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 font-semibold">
-            {user?.full_name
-              ? user.full_name.charAt(0).toUpperCase()
-              : "U"}
-          </div>
+        {/* Settings */}
+        <button
+          type="button"
+          onClick={() => {
+            console.log("Settings clicked");
+          }}
+          className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-indigo-200 transition hover:bg-white/10 hover:text-white"
+        >
+          <Settings className="h-5 w-5" />
 
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-white">
-              {user?.full_name || user?.username || "User"}
-            </p>
+          <span>
+            Settings
+          </span>
+        </button>
 
-            <p className="truncate text-xs text-indigo-200">
-              {user?.email || ""}
-            </p>
-
-            <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-indigo-300">
-              {user?.role || ""}
-            </p>
-          </div>
-        </div>
-
-        {/* Logout button */}
+        {/* Logout */}
         <button
           type="button"
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-indigo-200 transition-all duration-200 hover:bg-red-500/15 hover:text-white active:scale-[0.98]"
+          className="flex w-full items-center gap-3 rounded-xl bg-white/10 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-white/20 active:scale-[0.98]"
         >
           <LogOut className="h-5 w-5" />
-          <span>Logout</span>
+
+          <span>
+            Logout
+          </span>
         </button>
+
       </div>
+
     </aside>
   );
 }
