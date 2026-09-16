@@ -145,8 +145,6 @@ export function useAuth() {
   }
 
   return context;
-<<<<<<< HEAD
+
 }
-=======
-}
->>>>>>> 5f165a5 (Fix logout functionality)
+
