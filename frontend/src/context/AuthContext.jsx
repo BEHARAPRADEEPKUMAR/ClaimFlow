@@ -9,114 +9,134 @@ export function AuthProvider({ children }) {
 
   const [user, setUser] = useState(() => {
     try {
-      const storedUser = localStorage.getItem("user");
-      return storedUser ? JSON.parse(storedUser) : null;
+      const savedUser = localStorage.getItem("user");
+      return savedUser ? JSON.parse(savedUser) : null;
     } catch (error) {
-      console.error("Failed to load stored user:", error);
+      console.error("Failed to load saved user:", error);
+      localStorage.removeItem("user");
       return null;
     }
   });
 
   const [loading, setLoading] = useState(true);
 
+  /*
+   * Check whether the user already has a stored login.
+   */
   useEffect(() => {
     const accessToken = localStorage.getItem("access_token");
+    const savedUser = localStorage.getItem("user");
 
-    if (!accessToken) {
+    if (!accessToken || !savedUser) {
+      setUser(null);
       setLoading(false);
       return;
     }
 
-    api
-      .get("/auth/me/")
-      .then((response) => {
-        const currentUser = response.data;
+    try {
+      setUser(JSON.parse(savedUser));
+    } catch (error) {
+      console.error("Invalid saved user:", error);
 
-        setUser(currentUser);
-        localStorage.setItem("user", JSON.stringify(currentUser));
-      })
-      .catch((error) => {
-        console.error("Authentication check failed:", error);
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      localStorage.removeItem("user");
 
-        // Token is invalid/expired
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        localStorage.removeItem("user");
+      setUser(null);
+    }
 
-        setUser(null);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    setLoading(false);
   }, []);
 
+  /*
+   * Login
+   */
   const login = async (email, password) => {
     try {
       const response = await api.post("/auth/login/", {
-        email: email.trim(),
+        email: email.trim().toLowerCase(),
         password,
       });
 
       const data = response.data;
 
+      /*
+       * Save JWT tokens
+       */
       localStorage.setItem("access_token", data.access);
       localStorage.setItem("refresh_token", data.refresh);
+
+      /*
+       * Save logged-in user
+       */
       localStorage.setItem("user", JSON.stringify(data.user));
 
+      /*
+       * Update React state
+       */
       setUser(data.user);
 
-      return data.user;
+      return data;
     } catch (error) {
       console.error("Login error:", error);
+
       throw error;
     }
   };
 
+  /*
+   * Logout
+   */
   const logout = () => {
-    // Remove all ClaimFlow authentication data
+    console.log("Logging out...");
+
+    /*
+     * Remove authentication tokens
+     */
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
+
+    /*
+     * Remove saved user
+     */
     localStorage.removeItem("user");
 
-    // Clear React authentication state
+    /*
+     * Clear React authentication state
+     */
     setUser(null);
 
-    // Go back to ClaimFlow login page
+    /*
+     * Redirect to login page
+     */
     navigate("/login", { replace: true });
   };
 
-  const getDashboardPath = (role) => {
-    switch (role) {
-      case "EMPLOYEE":
-        return "/employee";
+  /*
+   * Optional helper
+   */
+  const isAuthenticated = Boolean(
+    user && localStorage.getItem("access_token")
+  );
 
-      case "MANAGER":
-        return "/manager";
-
-      case "FINANCE":
-        return "/finance";
-
-      default:
-        return "/login";
-    }
+  const value = {
+    user,
+    loading,
+    login,
+    logout,
+    isAuthenticated,
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        login,
-        logout,
-        getDashboardPath,
-        isAuthenticated: !!user,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 }
 
+/*
+ * Custom hook
+ */
 export function useAuth() {
   const context = useContext(AuthContext);
 
