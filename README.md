@@ -5,7 +5,7 @@ ClaimFlow is a full-stack expense management platform that helps employees submi
 The application also includes AI-assisted receipt extraction and intelligent duplicate-claim detection to reduce manual work and prevent duplicate payments.
 
 ---
-Application URL:
+Live Deployed Application URL:
 https://vsptechverse-claim-flow.vercel.app
 
 
