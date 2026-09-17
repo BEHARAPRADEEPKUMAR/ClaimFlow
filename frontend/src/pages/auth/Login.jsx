@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Receipt, Mail, Lock, ArrowRight } from "lucide-react";
+import {
+  Receipt,
+  Mail,
+  Lock,
+  ArrowRight,
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "sonner";
 
@@ -11,6 +16,10 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // --------------------------------------------------
+  // Login submit
+  // --------------------------------------------------
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,14 +32,19 @@ export default function Login() {
     try {
       setLoading(true);
 
-      // AuthContext login() returns the logged-in user
+      // AuthContext now returns data.user
       const user = await login(email, password);
 
       console.log("Logged-in user:", user);
 
-      toast.success(`Welcome back, ${user.username}`);
+      toast.success(
+        `Welcome back, ${user.full_name || user.username}`
+      );
 
-      // Redirect based on user role
+      // ------------------------------------------------
+      // Redirect based on role
+      // ------------------------------------------------
+
       if (user.role === "EMPLOYEE") {
         navigate("/employee", { replace: true });
       } else if (user.role === "MANAGER") {
@@ -38,29 +52,55 @@ export default function Login() {
       } else if (user.role === "FINANCE") {
         navigate("/finance", { replace: true });
       } else {
-        toast.error("User role is not recognized.");
+        toast.error("User role is not configured.");
       }
     } catch (error) {
       console.error("Login error:", error);
 
-      const backendError =
-        error.response?.data?.detail ||
-        error.response?.data?.error ||
-        error.response?.data?.non_field_errors?.[0];
+      const responseData = error.response?.data;
 
-      toast.error(
-        backendError || "Invalid email or password"
-      );
+      let errorMessage = "Invalid email or password.";
+
+      if (responseData?.detail) {
+        errorMessage = responseData.detail;
+      } else if (responseData?.error) {
+        errorMessage = responseData.error;
+      } else if (
+        responseData?.non_field_errors &&
+        responseData.non_field_errors.length > 0
+      ) {
+        errorMessage =
+          responseData.non_field_errors[0];
+      } else if (responseData?.email) {
+        errorMessage = Array.isArray(responseData.email)
+          ? responseData.email[0]
+          : responseData.email;
+      } else if (responseData?.password) {
+        errorMessage = Array.isArray(
+          responseData.password
+        )
+          ? responseData.password[0]
+          : responseData.password;
+      }
+
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
+  // --------------------------------------------------
+  // UI
+  // --------------------------------------------------
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
       <div className="w-full max-w-md">
 
-        {/* Logo / Brand */}
+        {/* ------------------------------------------------
+            Logo
+        ------------------------------------------------ */}
+
         <div className="mb-8 text-center">
 
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white">
@@ -77,10 +117,12 @@ export default function Login() {
 
         </div>
 
-        {/* Login Card */}
+        {/* ------------------------------------------------
+            Login Card
+        ------------------------------------------------ */}
+
         <div className="rounded-3xl bg-white p-8 shadow-2xl">
 
-          {/* Header */}
           <div className="mb-6">
 
             <h2 className="text-2xl font-bold text-slate-900">
@@ -93,13 +135,17 @@ export default function Login() {
 
           </div>
 
-          {/* Login Form */}
+          {/* ------------------------------------------------
+              Login Form
+          ------------------------------------------------ */}
+
           <form
             onSubmit={handleSubmit}
             className="space-y-5"
           >
 
             {/* Email */}
+
             <div>
 
               <label className="mb-2 block text-sm font-medium text-slate-700">
@@ -113,12 +159,13 @@ export default function Login() {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) =>
+                    setEmail(e.target.value)
+                  }
                   placeholder="you@company.com"
                   autoComplete="email"
                   required
-                  disabled={loading}
-                  className="w-full rounded-xl border border-slate-200 py-3 pl-11 pr-4 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 disabled:bg-slate-50"
+                  className="w-full rounded-xl border border-slate-200 py-3 pl-11 pr-4 outline-none transition focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
                 />
 
               </div>
@@ -126,6 +173,7 @@ export default function Login() {
             </div>
 
             {/* Password */}
+
             <div>
 
               <label className="mb-2 block text-sm font-medium text-slate-700">
@@ -139,42 +187,43 @@ export default function Login() {
                 <input
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) =>
+                    setPassword(e.target.value)
+                  }
                   placeholder="••••••••"
                   autoComplete="current-password"
                   required
-                  disabled={loading}
-                  className="w-full rounded-xl border border-slate-200 py-3 pl-11 pr-4 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 disabled:bg-slate-50"
+                  className="w-full rounded-xl border border-slate-200 py-3 pl-11 pr-4 outline-none transition focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
                 />
 
               </div>
 
             </div>
 
-            {/* Sign In Button */}
+            {/* Sign in button */}
+
             <button
               type="submit"
               disabled={loading}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 py-3.5 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
 
-              {loading ? (
-                <>
-                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                  Signing in...
-                </>
-              ) : (
-                <>
-                  Sign in
-                  <ArrowRight className="h-5 w-5" />
-                </>
+              {loading
+                ? "Signing in..."
+                : "Sign in"}
+
+              {!loading && (
+                <ArrowRight className="h-5 w-5" />
               )}
 
             </button>
 
           </form>
 
-          {/* Demo Credentials */}
+          {/* ------------------------------------------------
+              Demo Credentials
+          ------------------------------------------------ */}
+
           <div className="mt-6 rounded-xl bg-slate-50 p-4 text-xs text-slate-500">
 
             <p className="font-semibold text-slate-700">
@@ -183,14 +232,14 @@ export default function Login() {
 
             <p className="mt-1">
               Email:{" "}
-              <span className="font-mono text-slate-700">
+              <span className="font-mono">
                 rahul.reddy@claimflow.demo
               </span>
             </p>
 
             <p className="mt-1">
               Password:{" "}
-              <span className="font-mono text-slate-700">
+              <span className="font-mono">
                 Demo@123
               </span>
             </p>
@@ -198,7 +247,6 @@ export default function Login() {
           </div>
 
         </div>
-
       </div>
     </div>
   );
