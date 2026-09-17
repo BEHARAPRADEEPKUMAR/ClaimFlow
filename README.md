@@ -5,6 +5,40 @@ ClaimFlow is a full-stack expense management platform that helps employees submi
 The application also includes AI-assisted receipt extraction and intelligent duplicate-claim detection to reduce manual work and prevent duplicate payments.
 
 ---
+Frontend:
+https://vsptechverse-claim-flow.vercel.app
+
+Backend API:
+https://claimflow-zct0.onrender.com
+
+GitHub Repository:
+https://github.com/BEHARAPRADEEPKUMAR/ClaimFlow
+
+🔐 Demo Login Credentials
+
+All demo accounts use the following password:
+
+Password: Demo@123
+
+👨‍💻 Employees
+Employee	Email	Password
+Rahul Reddy	rahul.reddy@claimflow.demo	Demo@123
+Sneha Iyer	sneha.iyer@claimflow.demo	Demo@123
+Karthik Rao	karthik.rao@claimflow.demo	Demo@123
+Ananya Nair	ananya.nair@claimflow.demo	Demo@123
+Meera Kapoor	meera.kapoor@claimflow.demo	Demo@123
+Aditya Verma	aditya.verma@claimflow.demo	Demo@123
+Neha Patel	neha.patel@claimflow.demo	Demo@123
+Sanjay Kumar	sanjay.kumar@claimflow.demo	Demo@123
+👨‍💼 Managers
+Manager	Email	Password
+Arjun Mehta	arjun.mehta@claimflow.demo	Demo@123
+Kavya Reddy	kavya.reddy@claimflow.demo	Demo@123
+Rohit Sharma	rohit.sharma@claimflow.demo	Demo@123
+💰 Finance
+Finance User	Email	Password
+Priya Sharma	priya.finance@claimflow.demo	Demo@123
+Vikram Singh	vikram.finance@claimflow.demo	Demo@123
 
 ## 🚀 Features
 
