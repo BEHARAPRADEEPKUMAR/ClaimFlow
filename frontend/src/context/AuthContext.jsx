@@ -10,19 +10,23 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
       const savedUser = localStorage.getItem("user");
+
       return savedUser ? JSON.parse(savedUser) : null;
     } catch (error) {
       console.error("Failed to load saved user:", error);
+
       localStorage.removeItem("user");
+
       return null;
     }
   });
 
   const [loading, setLoading] = useState(true);
 
-  /*
-   * Check whether the user already has a stored login.
-   */
+  // --------------------------------------------------
+  // Restore existing login session
+  // --------------------------------------------------
+
   useEffect(() => {
     const accessToken = localStorage.getItem("access_token");
     const savedUser = localStorage.getItem("user");
@@ -48,35 +52,56 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
-  /*
-   * Login
-   */
+  // --------------------------------------------------
+  // Login
+  // --------------------------------------------------
+
   const login = async (email, password) => {
     try {
       const response = await api.post("/auth/login/", {
         email: email.trim().toLowerCase(),
-        password,
+        password: password,
       });
 
       const data = response.data;
 
-      /*
-       * Save JWT tokens
-       */
+      // -----------------------------------------------
+      // Validate backend response
+      // -----------------------------------------------
+
+      if (!data.access || !data.refresh || !data.user) {
+        throw new Error("Invalid login response from server.");
+      }
+
+      // -----------------------------------------------
+      // Save JWT tokens
+      // -----------------------------------------------
+
       localStorage.setItem("access_token", data.access);
       localStorage.setItem("refresh_token", data.refresh);
 
-      /*
-       * Save logged-in user
-       */
-      localStorage.setItem("user", JSON.stringify(data.user));
+      // -----------------------------------------------
+      // Save logged-in user
+      // -----------------------------------------------
 
-      /*
-       * Update React state
-       */
+      localStorage.setItem(
+        "user",
+        JSON.stringify(data.user)
+      );
+
+      // -----------------------------------------------
+      // Update React authentication state
+      // -----------------------------------------------
+
       setUser(data.user);
 
-      return data;
+      // -----------------------------------------------
+      // IMPORTANT:
+      // Return only the user object.
+      // Login.jsx expects user.username and user.role.
+      // -----------------------------------------------
+
+      return data.user;
     } catch (error) {
       console.error("Login error:", error);
 
@@ -84,40 +109,40 @@ export function AuthProvider({ children }) {
     }
   };
 
-  /*
-   * Logout
-   */
+  // --------------------------------------------------
+  // Logout
+  // --------------------------------------------------
+
   const logout = () => {
     console.log("Logging out...");
 
-    /*
-     * Remove authentication tokens
-     */
+    // Remove JWT tokens
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
 
-    /*
-     * Remove saved user
-     */
+    // Remove saved user
     localStorage.removeItem("user");
 
-    /*
-     * Clear React authentication state
-     */
+    // Clear React authentication state
     setUser(null);
 
-    /*
-     * Redirect to login page
-     */
-    navigate("/login", { replace: true });
+    // Redirect to login page
+    navigate("/login", {
+      replace: true,
+    });
   };
 
-  /*
-   * Optional helper
-   */
+  // --------------------------------------------------
+  // Authentication status
+  // --------------------------------------------------
+
   const isAuthenticated = Boolean(
     user && localStorage.getItem("access_token")
   );
+
+  // --------------------------------------------------
+  // Context value
+  // --------------------------------------------------
 
   const value = {
     user,
@@ -134,17 +159,18 @@ export function AuthProvider({ children }) {
   );
 }
 
-/*
- * Custom hook
- */
+// --------------------------------------------------
+// Custom authentication hook
+// --------------------------------------------------
+
 export function useAuth() {
   const context = useContext(AuthContext);
 
   if (!context) {
-    throw new Error("useAuth must be used inside AuthProvider");
+    throw new Error(
+      "useAuth must be used inside AuthProvider"
+    );
   }
 
   return context;
-
 }
-
