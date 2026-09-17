@@ -5,14 +5,9 @@ ClaimFlow is a full-stack expense management platform that helps employees submi
 The application also includes AI-assisted receipt extraction and intelligent duplicate-claim detection to reduce manual work and prevent duplicate payments.
 
 ---
-Frontend:
+Application URL:
 https://vsptechverse-claim-flow.vercel.app
 
-Backend API:
-https://claimflow-zct0.onrender.com
-
-GitHub Repository:
-https://github.com/BEHARAPRADEEPKUMAR/ClaimFlow
 
 🔐 Demo Login Credentials
 
